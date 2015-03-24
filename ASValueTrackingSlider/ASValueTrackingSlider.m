@@ -74,7 +74,7 @@ static void * ASValueTrackingSliderBoundsContext = &ASValueTrackingSliderBoundsC
     NSAssert(font, @"font can not be nil, it must be a valid UIFont");
     _font = font;
     [self.popUpView setFont:font];
-
+    
     [self calculatePopUpViewSize];
 }
 
@@ -90,7 +90,7 @@ static void * ASValueTrackingSliderBoundsContext = &ASValueTrackingSliderBoundsC
     _popUpViewColor = popUpViewColor;
     _popUpViewAnimatedColors = nil; // animated colors should be discarded
     [self.popUpView setColor:popUpViewColor];
-
+    
     if (_autoAdjustTrackColor) {
         super.minimumTrackTintColor = [self.popUpView opaqueColor];
     }
@@ -199,22 +199,22 @@ static void * ASValueTrackingSliderBoundsContext = &ASValueTrackingSliderBoundsC
     _autoAdjustTrackColor = YES;
     _valueRange = self.maximumValue - self.minimumValue;
     _popUpViewAlwaysOn = NO;
-
+    
     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
     [formatter setNumberStyle:NSNumberFormatterDecimalStyle];
     [formatter setRoundingMode:NSNumberFormatterRoundHalfUp];
     [formatter setMaximumFractionDigits:2];
     [formatter setMinimumFractionDigits:2];
     _numberFormatter = formatter;
-
+    
     self.popUpView = [[ASValuePopUpView alloc] initWithFrame:CGRectMake(0, 0, 1, 1)];
     self.popUpViewColor = [UIColor colorWithHue:0.6 saturation:0.6 brightness:0.5 alpha:0.8];
-
+    
     self.popUpViewCornerRadius = 4.0;
     self.popUpView.alpha = 0.0;
     self.popUpView.delegate = self;
     [self addSubview:self.popUpView];
-
+    
     self.textColor = [UIColor whiteColor];
     self.font = [UIFont boldSystemFontOfSize:22.0f];
     [self positionAndUpdatePopUpView];
@@ -231,7 +231,7 @@ static void * ASValueTrackingSliderBoundsContext = &ASValueTrackingSliderBoundsC
 - (void)positionAndUpdatePopUpView
 {
     NSString *valueString; // ask dataSource for string, if nil get string from _numberFormatter
-
+    
     if ((valueString = [self.dataSource slider:self stringForValue:self.value])) {
         _popUpViewSize = [self.popUpView popUpSizeForString:valueString];
     } else {
@@ -253,7 +253,9 @@ static void * ASValueTrackingSliderBoundsContext = &ASValueTrackingSliderBoundsC
     CGFloat thumbH = thumbRect.size.height;
     
     CGRect popUpRect = CGRectInset(thumbRect, (thumbW - _popUpViewSize.width)/2, (thumbH - _popUpViewSize.height)/2);
-    popUpRect.origin.y = thumbRect.origin.y - _popUpViewSize.height;
+    //    popUpRect.origin.y = thumbRect.origin.y - _popUpViewSize.height;
+    
+    popUpRect.origin.y = thumbRect.origin.y - (_popUpViewSize.height - 122);
     
     // determine if popUpRect extends beyond the frame of the UISlider
     // if so adjust frame and set the center offset of the PopUpView's arrow
@@ -262,7 +264,7 @@ static void * ASValueTrackingSliderBoundsContext = &ASValueTrackingSliderBoundsC
     
     CGFloat offset = minOffsetX < 0.0 ? minOffsetX : (maxOffsetX > 0.0 ? maxOffsetX : 0.0);
     popUpRect.origin.x -= offset;
-
+    
     [self.popUpView setArrowCenterOffset:offset];
     self.popUpView.frame = CGRectIntegral(popUpRect);
 }
@@ -270,7 +272,7 @@ static void * ASValueTrackingSliderBoundsContext = &ASValueTrackingSliderBoundsC
 - (void)autoColorTrack
 {
     if (_autoAdjustTrackColor == NO || !_popUpViewAnimatedColors) return;
-
+    
     super.minimumTrackTintColor = [self.popUpView opaqueColor];
 }
 
@@ -279,7 +281,7 @@ static void * ASValueTrackingSliderBoundsContext = &ASValueTrackingSliderBoundsC
     // set _popUpViewSize to the maximum size required (negative values need more width than positive values)
     CGSize minValSize = [self.popUpView popUpSizeForString:[_numberFormatter stringFromNumber:@(self.minimumValue)]];
     CGSize maxValSize = [self.popUpView popUpSizeForString:[_numberFormatter stringFromNumber:@(self.maximumValue)]];
-
+    
     _defaultPopUpViewSize = (minValSize.width >= maxValSize.width) ? minValSize : maxValSize;
     _popUpViewSize = _defaultPopUpViewSize;
 }

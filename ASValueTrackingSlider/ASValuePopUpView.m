@@ -14,10 +14,10 @@
 #import "ASValuePopUpView.h"
 
 const float ARROW_LENGTH = 13.0;
-const float MIN_POPUPVIEW_WIDTH = 36.0;
-const float MIN_POPUPVIEW_HEIGHT = 27.0;
+const float MIN_POPUPVIEW_WIDTH = 30.0;
+const float MIN_POPUPVIEW_HEIGHT = 50.0;
 const float POPUPVIEW_WIDTH_PAD = 1.15;
-const float POPUPVIEW_HEIGHT_PAD = 1.1;
+const float POPUPVIEW_HEIGHT_PAD = 1.5;
 
 NSString *const FillColorAnimation = @"fillColor";
 
@@ -37,17 +37,20 @@ NSString *const FillColorAnimation = @"fillColor";
     self = [super initWithFrame:frame];
     if (self) {
         self.layer.anchorPoint = CGPointMake(0.5, 1);
-        
         self.userInteractionEnabled = NO;
+        
         _backgroundLayer = [CAShapeLayer layer];
-        _backgroundLayer.anchorPoint = CGPointMake(0, 0);
+        _backgroundLayer.anchorPoint = CGPointMake(0, 1);
         
         _textLayer = [CATextLayer layer];
         _textLayer.alignmentMode = kCAAlignmentCenter;
-        _textLayer.anchorPoint = CGPointMake(0, 0);
+        _textLayer.anchorPoint = CGPointMake(0.83, 0.60);
         _textLayer.contentsScale = [UIScreen mainScreen].scale;
         _textLayer.actions = @{@"bounds" : [NSNull null],   // prevent implicit animation of bounds
                                @"position" : [NSNull null]};// and position
+        
+        CGAffineTransform trans = CGAffineTransformRotate(_textLayer.affineTransform, 270.0 / 180 * M_PI);
+        [_textLayer setAffineTransform:trans];
         
         [self.layer addSublayer:_backgroundLayer];
         [self.layer addSublayer:_textLayer];
@@ -139,7 +142,7 @@ NSString *const FillColorAnimation = @"fillColor";
     // the arrow tip should be the origin of any scale animations
     // to achieve this, position the anchorPoint at the tip of the arrow
     CGRect f = self.layer.frame;
-    self.layer.anchorPoint = CGPointMake(0.5+(offset/self.bounds.size.width), 1);
+    self.layer.anchorPoint = CGPointMake(0.5 + (offset/self.bounds.size.width), 1);
     self.layer.frame = f; // changing anchor repositions layer, so must reset frame afterwards
     [self drawPath];
 }
@@ -148,8 +151,8 @@ NSString *const FillColorAnimation = @"fillColor";
 {
     [[_attributedString mutableString] setString:string];
     CGFloat w, h;
-    w = ceilf(MAX([_attributedString size].width, MIN_POPUPVIEW_WIDTH) * POPUPVIEW_WIDTH_PAD);
-    h = ceilf(MAX([_attributedString size].height, MIN_POPUPVIEW_HEIGHT) * POPUPVIEW_HEIGHT_PAD + ARROW_LENGTH);
+    w = 50;//ceilf(MAX([_attributedString size].width, MIN_POPUPVIEW_WIDTH) * POPUPVIEW_WIDTH_PAD);
+    h = 88;//ceilf(MAX([_attributedString size].height, MIN_POPUPVIEW_HEIGHT) * POPUPVIEW_HEIGHT_PAD + ARROW_LENGTH);
     return CGSizeMake(w, h);
 }
 
@@ -189,8 +192,8 @@ NSString *const FillColorAnimation = @"fillColor";
         
         CABasicAnimation *scaleAnim = [CABasicAnimation animationWithKeyPath:@"transform"];
         scaleAnim.fromValue = [self.layer.presentationLayer valueForKey:@"transform"];
-        scaleAnim.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(0.5, 0.5, 1)];
-        scaleAnim.duration = 0.6;
+        scaleAnim.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(0.7, 0.7, 1)];
+        scaleAnim.duration = 0.8;
         scaleAnim.removedOnCompletion = NO;
         scaleAnim.fillMode = kCAFillModeForwards;
         [scaleAnim setTimingFunction:[CAMediaTimingFunction functionWithControlPoints:0.1 :-2 :0.3 :3]];
@@ -198,8 +201,8 @@ NSString *const FillColorAnimation = @"fillColor";
         
         CABasicAnimation* fadeOutAnim = [CABasicAnimation animationWithKeyPath:@"opacity"];
         fadeOutAnim.fromValue = [self.layer.presentationLayer valueForKey:@"opacity"];
-        fadeOutAnim.toValue = @0.0;
-        fadeOutAnim.duration = 0.8;
+        fadeOutAnim.toValue = @0.4;
+        fadeOutAnim.duration = 1.5;
         [self.layer addAnimation:fadeOutAnim forKey:@"opacity"];
         self.layer.opacity = 0.0;
     } [CATransaction commit];
@@ -228,10 +231,11 @@ NSString *const FillColorAnimation = @"fillColor";
     // Create arrow path
     CGFloat maxX = CGRectGetMaxX(roundedRect); // prevent arrow from extending beyond this point
     CGFloat arrowTipX = CGRectGetMidX(self.bounds) + _arrowCenterOffset;
+    
     CGPoint tip = CGPointMake(arrowTipX, CGRectGetMaxY(self.bounds));
     
     CGFloat arrowLength = CGRectGetHeight(roundedRect)/2.0;
-    CGFloat x = arrowLength * tan(45.0 * M_PI/180); // x = half the length of the base of the arrow
+    CGFloat x = arrowLength * tan(45.0 * M_PI / 180); // x = half the length of the base of the arrow
     
     UIBezierPath *arrowPath = [UIBezierPath bezierPath];
     [arrowPath moveToPoint:tip];
@@ -243,6 +247,7 @@ NSString *const FillColorAnimation = @"fillColor";
     [roundedRectPath appendPath:arrowPath];
     
     _backgroundLayer.path = roundedRectPath.CGPath;
+    _backgroundLayer.affineTransform = CGAffineTransformRotate(CGAffineTransformMakeScale(-1, 1), M_PI);
 }
 
 - (void)layoutSubviews
@@ -250,14 +255,20 @@ NSString *const FillColorAnimation = @"fillColor";
     [super layoutSubviews];
     
     if (CGSizeEqualToSize(self.bounds.size, _oldSize)) return; // return if view size hasn't changed
-
+    
     _oldSize = self.bounds.size;
     _backgroundLayer.bounds = self.bounds;
     
-    CGFloat textHeight = [_attributedString size].height;
+//    CGFloat textHeight = [_attributedString size].height;
+    //    CGRect textRect = CGRectMake(self.bounds.origin.x,
+    //                                 (self.bounds.size.height-ARROW_LENGTH-textHeight)/2,
+    //                                 self.bounds.size.width, textHeight);
+    
+    
     CGRect textRect = CGRectMake(self.bounds.origin.x,
-                                 (self.bounds.size.height-ARROW_LENGTH-textHeight)/2,
-                                 self.bounds.size.width, textHeight);
+                                 -14,
+                                 self.bounds.size.width, 70);
+    
     _textLayer.frame = CGRectIntegral(textRect);
     [self drawPath];
 }
